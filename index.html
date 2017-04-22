@@ -1,0 +1,363 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css"/>
+    </head>
+<body>
+<div>
+    <!-- filters area -->
+    <div class="deck_fixed">
+        <div class="deck_filters_box">
+
+            <div class="deck_title">
+                <span class="deck_title_text">Radiation Heat Map : </span>
+            </div>
+            <div style="margin-left: 252px;">
+                <input type="text" class="search_box" style="     margin-top: 7px;width: 500px;
+    padding: 5px;" placeholder="Enter the location"  onfocus="geolocate()"  id="autocomplete" >
+            </div>
+
+        </div>
+    </div>
+    <!-- filter area ends -->
+</div>
+<!-- sidebar ends -->
+
+<div id="map" style="width:100%; height: 680px;margin-top: 126px;position: relative; overflow: hidden; "></div></div>
+<div id="legend"><h3>Radiation Heat Map</h3></div>
+<!-- Push Page wrap Ends -->
+
+<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBUjmWKibtbiz2ihrcLXUDjkc5fql77gd4&libraries=places&callback=initMap"></script>
+
+<script>
+    var placeSearch, autocomplete;
+    var componentForm = {
+        street_number: 'short_name',
+        route: 'long_name',
+        locality: 'long_name',
+        administrative_area_level_1: 'short_name',
+        country: 'long_name',
+        postal_code: 'short_name'
+    };
+
+    // Bias the autocomplete object to the user's geographical location,
+    // as supplied by the browser's 'navigator.geolocation' object.
+    function geolocate() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var geolocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                var circle = new google.maps.Circle({
+                    center: geolocation,
+                    radius: position.coords.accuracy,
+                    strokeColor: '#283593',
+                    strokeOpacity: 0.10,
+                    strokeWeight: 0.30,
+                    fillColor: '#7986CB',
+                    fillOpacity: 0.05,
+                    map: map,
+//                    radius: 500
+
+                });
+                autocomplete.setBounds(circle.getBounds());
+            });
+        }
+    }
+
+    var map,infoWindow;
+    var locations = [];
+
+
+    var towers = [
+//        {lat: 28.6281260, lng:77.2233045,radius:10,colors:'#4CAF50',stroke:'#1B5E20'},
+//        {lat: 28.6281192, lng:77.2234573,radius:15,colors:'#4CAF50',stroke:'#558B2F'},
+//        {lat: 28.6281192, lng:77.2244573,radius:20,colors:'#4CAF50',stroke:'#558B2F'},
+//        {lat: 28.6381192, lng:77.2344573,radius:16,colors:'#4CAF50',stroke:'#558B2F'},
+//        {lat: 28.6280086, lng:77.2230080,radius:21,colors:'#9CCC65',stroke:'#1B5E20'},
+//        {lat: 28.625968, lng:77.2193926,radius:20,colors:'#F44336',stroke:'#1B5E20'},
+//        {lat: 28.627941, lng:77.2226368,radius:17,colors:'#F44336',stroke:'#1B5E20'},
+//        {lat: 28.628053, lng:77.223184,radius:13,colors:'#F44336',stroke:'#1B5E20'},
+//        {lat: 28.6263773, lng:77.2217853,radius:50,colors:'#F44336',stroke:'#1B5E20'},
+//        {lat: 28.6279075, lng:77.2216543,radius:70,colors:'#F44336',stroke:'#1B5E20'},
+        {lat: 28.629257, lng:77.2215954,radius:120,colors:'#8BC34A',stroke:'#1B5E20'},
+        {lat: 28.6286439, lng:77.2228673,radius:120,colors:'#8BC34A',stroke:'#1B5E20'},
+        {lat: 28.6273993, lng:77.2231333,radius:120,colors:'#8BC34A',stroke:'#1B5E20'}
+    ];
+
+
+    function initMap() {
+        infoWindow = new google.maps.InfoWindow;
+        var centerLoc = {lat: 28.6280531, lng: 77.2231545};
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: centerLoc,
+            zoom: 17,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                mapTypeIds: ['roadmap', 'terrain']
+            },
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.LEFT_BOTTOM
+            },
+            scaleControl: true,
+            streetViewControl: true,
+            streetViewControlOptions: {
+                position: google.maps.ControlPosition.LEFT_BOTTOM
+            },
+            fullscreenControl: true,
+            gestureHandling: 'cooperative'
+        });
+
+        autocomplete = new google.maps.places.Autocomplete(
+            /** @type {!HTMLInputElement} */(document.getElementById('autocomplete')),
+            {types: ['geocode']});
+
+        // When the user selects an address from the dropdown, populate the address
+        // fields in the form.
+        autocomplete.addListener('place_changed',function(){
+            var location = autocomplete.getPlace();
+
+            map.setCenter(location.geometry.location);
+            var marker = new google.maps.Marker({
+                map: map,
+                position: location.geometry.location
+            });
+
+            infoWindow.setContent(location.formatted_address);
+            infoWindow.open(map, marker);
+        });
+
+        var legend = document.getElementById('legend');
+        var div = document.createElement('div');
+
+        var legendData = [
+            {
+                rf:"IN Meters",
+                remarks:"REMARKS (Power/Area)",
+                color:"#fff"
+            },{
+            rf:"0-5 M",
+            remarks:"EXTREMELY HIGH 3.18(w/m2)",
+            color:"#C20000"
+        },{
+            rf:"5-50 M",
+            remarks:"VERY HIGH 0.0318(w/m2)",
+            color:"#FF0000"
+        },{
+            rf:"101-200 M",
+            remarks:"HIGH 0.008(w/m2)",
+            color:"#FF9A00"
+        },{
+            rf:"201-300 M",
+            remarks:"MEDIUM 0.000318(w/m2)",
+            color:"#FF9A00"
+        }];
+
+        for(var i=0;i<legendData.length;i++){
+            var div = document.createElement('div');
+
+            div.innerHTML =
+                '<div class="div_row">' +
+                '<span class="lenged_font_color" style="background: '+ legendData[i].color +'"></span>' +
+                '<span class="lenged_font">' +legendData[i].rf + '</span>' +
+                '<span class="lenged_font">' + legendData[i].remarks+ '</span>' +
+                '</div>';
+
+            legend.appendChild(div);
+        }
+
+        var p = document.createElement('p');
+        p.innerHTML = 'Source : IIT Bombay Report <br/> Prfo: Girish Kumar';
+        legend.appendChild(p);
+
+        map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
+
+        var service = new google.maps.places.PlacesService(map);
+        service.nearbySearch({
+            location: centerLoc,
+            radius: 500,
+            type: ['store']
+        }, callback);
+
+
+        var marker1 = new google.maps.Marker({
+            position: centerLoc,
+            map: map,
+            title:'You are standing here'
+        });
+
+        var centerLoc = {lat: 28.6280531, lng: 77.2231545};
+
+        userCircle = new google.maps.Circle({
+            strokeColor: '#283593',
+            strokeOpacity: 1,
+            strokeWeight: 0.35,
+            fillColor: '#7986CB',
+            fillOpacity: 0.25,
+            map: map,
+            center: centerLoc,
+            radius: 500
+        });
+
+        var infowindow = new google.maps.InfoWindow({
+            content: '<div id="pop_up">' +
+            '<h4>You are here!!<br/> Lattitude :'+ centerLoc.lat +' Longitude :'+ centerLoc.lng+'</h4>' +
+            '2 Cell Towers near you (withing 50 meters)' +
+            '<br/>' +
+            '<br/>Condition : Poor</div>'
+        });
+
+//        marker1.addListener('click', function() {
+//            infowindow.open(map, marker1);
+//        });
+
+        marker1.addListener('click',function(){
+
+            infowindow.open(map,marker1);
+
+            for(var i=0;i<towers.length;i++){
+                var pos = {lat:towers[i].lat,lng:towers[i].lng};
+
+                console.log(towers[i].radius);
+                var icon = {
+                    url: 'tower1.png',
+                    scaledSize: new google.maps.Size(50, 50), // scaled size
+//                origin: new google.maps.Point(0,0), // origin
+//                anchor: new google.maps.Point(0, 0) // anchor
+                };
+
+                marker = new google.maps.Marker({
+                    position:pos,
+                    icon:icon,
+//                    animation: google.maps.Animation.DROP,
+                    map:map
+                });
+
+                circle = new google.maps.Circle({
+                    strokeColor: '#fff',
+                    strokeOpacity: 0,
+                    strokeWeight: 0,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    map: map,
+                    center: pos,
+                    radius: towers[i].radius
+                });
+
+
+//
+                circle2 = new google.maps.Circle({
+                    strokeColor: 'FF9A00',
+                    strokeOpacity: 0,
+                    strokeWeight: 0,
+                    fillColor: '#FF9A00',
+                    fillOpacity: 0.35,
+                    map: map,
+                    center: pos,
+                    radius: 200
+                });
+
+                circle3 = new google.maps.Circle({
+                    strokeColor: 'FF9A00',
+                    strokeOpacity: 1,
+                    strokeWeight: 0,
+                    fillColor: '#FF9A00',
+                    fillOpacity: 0.20,
+                    map: map,
+                    center: pos,
+                    radius: 300
+                });
+
+                circle1 = new google.maps.Circle({
+//                    center: center,
+                    radius: 5,
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 1,
+                    strokeWeight: 3,
+                    fillColor: "#FF0000",
+                    fillOpacity: 0.85,
+                    map: map,
+                    center: pos,
+                });
+
+                var direction = 1;
+                var rMin = 100, rMax = 300;
+                setInterval(function() {
+                    var radius = circle.getRadius();
+                    if ((radius > rMax) || (radius < rMin)) {
+                        direction *= -1;
+                    }
+                    circle.setRadius(radius + direction * 10);
+                }, 700);
+            }
+
+
+        });
+
+
+        for(var i=0;i<towers.length;i++){
+            var pos = {lat:towers[i].lat,lng:towers[i].lng};
+
+            var icon = {
+                url: './img/tower1.png',
+                scaledSize: new google.maps.Size(50, 50), // scaled size
+//                origin: new google.maps.Point(0,0), // origin
+//                anchor: new google.maps.Point(0, 0) // anchor
+            };
+
+            marker = new google.maps.Marker({
+                position:pos,
+                icon:icon,
+                animation: google.maps.Animation.DROP,
+                map:map
+            });
+
+
+
+        }
+    }
+
+    function toggleBounce() {
+        if (marker.getAnimation() !== null) {
+            marker.setAnimation(null);
+        } else {
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+        }
+    }
+
+    function callback(results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            for (var i = 0; i < results.length; i++) {
+                createMarker(results[i]);
+            }
+        }
+    }
+
+
+    function createMarker(place) {
+        var placeLoc = place.geometry.location;
+        var marker = new google.maps.Marker({
+            map: map,
+            position: place.geometry.location
+        });
+
+        google.maps.event.addListener(marker, 'click', function() {
+            infowindow.setContent(place.name);
+            infowindow.open(map, this);
+        });
+    }
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(browserHasGeolocation ?
+            'Error: The Geolocation service failed.' :
+            'Error: Your browser doesn\'t support geolocation.');
+        infoWindow.open(map);
+    }
+
+</script>
+</body>
+</html>
